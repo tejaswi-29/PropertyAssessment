@@ -1,0 +1,85 @@
+---
+title: "PropertyAssessment"
+author: "Tejaswi Pallapothu"
+date: "2023-11-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+
+
+```
+
+```{r}
+history <- read.csv("data/historic_property_data.csv")
+head(history)
+codebook <- read.csv("data/codebook.csv")
+head(codebook)
+predict <- read.csv("data/predict_property_data.csv")
+head(predict)
+```
+
+```{r}
+num_rows <- nrow(history)
+num_cols <- ncol(history)
+print(num_rows)
+print(num_cols)
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r}
+#checking for duplicate rows
+duplicate_rows <- history[duplicated(history) | duplicated(history, fromLast = TRUE), ]
+print(duplicate_rows)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+```{r}
+null_counts <- colSums(is.na(history))
+print(null_counts)
+
+```
+
+
+
+
+```{r}
+#checking the is_predictor variables in the codebook dataframe, if false, dropping those columns from historical_data and test data
+#can we drop char_attic_fnsh (33316 nulls), char_tp_dsgn(27166 nulls), char_apts(43124), char_porch(40634)???
+# --> these are the cols that are is_predictor true but have lots of nulls
+
+
+variables_to_drop <- codebook[codebook$var_is_predictor == FALSE, "var_name_standard"] 
+print(variables_to_drop)
+#Drop variables from history 
+history <- history[, !(colnames(history) %in% variables_to_drop), drop = FALSE]
+
+#Drop variables from predict 
+predict <- predict[, !(colnames(predict) %in% variables_to_drop), drop = FALSE]
+num_rows <- nrow(history)
+num_cols <- ncol(history)
+print(num_rows)
+print(num_cols)
+
+num_rows <- nrow(predict)
+num_cols <- ncol(predict)
+print(num_rows)
+print(num_cols)
+
+```
