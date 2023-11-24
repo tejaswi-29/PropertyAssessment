@@ -16,7 +16,7 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 ```{r}
-
+library(dplyr)
 
 ```
 
@@ -82,4 +82,77 @@ num_cols <- ncol(predict)
 print(num_rows)
 print(num_cols)
 
+```
+```{r}
+# Count the number of negative values in the specified column
+negative_values <- history[history$sale_price < 0, ]
+print("Rows with Negative Values:")
+print(negative_values)
+
+```
+```{r}
+numeric_history <- history %>%
+  select_if(is.numeric)
+cor_matrix <- cor(numeric_history)
+
+# Print the correlation matrix
+print(cor_matrix)
+```
+```{r}
+unique_value_counts <- sapply(numeric_history, function(x) length(unique(x)))
+print(unique_value_counts)
+```
+```{r}
+null_counts <- colSums(is.na(history))
+print(null_counts)
+
+#dropping char_porch,char_attic_fnsh, char_tp_dsgn,char_gar1_area, char_gar1_cnst, char_tp_plan, char_apts because they have a lot of null values
+history <- history %>%
+  select(-char_porch, -char_attic_fnsh, -char_tp_dsgn, -char_gar1_area, -char_gar1_cnst, -char_tp_plan, -char_apts)
+
+
+```
+```{r}
+null_counts <- colSums(is.na(history))
+print(null_counts)
+#now replacing numerical null values with median and categorical null values with mode
+numerical_cols <- sapply(history, is.numeric)
+history <- history %>%
+  mutate(across(where(is.numeric), ~ifelse(is.na(.), median(., na.rm = TRUE), .)))
+
+Mode <- function(x, na.rm = FALSE) {
+  if (na.rm) {
+    x <- x[!is.na(x)]
+  }
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+
+replace_nulls_with_unknown <- function(data) {
+  data %>%
+    mutate(across(where(is.factor), ~ifelse(is.na(.), "Unknown", .)))
+}
+history <- replace_nulls_with_unknown(history)
+
+
+
+column_datatypes <- sapply(history, class)
+
+# Display the datatypes of each column
+print(column_datatypes)
+```
+```{r}
+#replaced nulls with "Unknown", created a new category
+history$ind_garage[is.na(history$ind_garage)] <- "Unknown"
+null_counts <- colSums(is.na(history))
+print(null_counts)
+
+history$geo_school_hs_district[is.na(history$geo_school_hs_district)] <- "Unknown"
+null_counts <- colSums(is.na(history))
+print(null_counts)
+
+history$geo_school_elem_district[is.na(history$geo_school_elem_district)] <- "Unknown"
+null_counts <- colSums(is.na(history))
+print(null_counts)
 ```
