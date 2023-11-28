@@ -18,6 +18,7 @@ When you click the **Knit** button a document will be generated that includes bo
 ```{r}
 library(dplyr)
 
+
 ```
 
 ```{r}
@@ -37,9 +38,8 @@ print(num_cols)
 
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+
 
 ```{r}
 #checking for duplicate rows
@@ -115,25 +115,11 @@ history <- history %>%
 ```{r}
 null_counts <- colSums(is.na(history))
 print(null_counts)
-#now replacing numerical null values with median and categorical null values with mode
+#now replacing numerical null values with median 
 numerical_cols <- sapply(history, is.numeric)
 history <- history %>%
   mutate(across(where(is.numeric), ~ifelse(is.na(.), median(., na.rm = TRUE), .)))
 
-Mode <- function(x, na.rm = FALSE) {
-  if (na.rm) {
-    x <- x[!is.na(x)]
-  }
-  ux <- unique(x)
-  ux[which.max(tabulate(match(x, ux)))]
-}
-
-
-replace_nulls_with_unknown <- function(data) {
-  data %>%
-    mutate(across(where(is.factor), ~ifelse(is.na(.), "Unknown", .)))
-}
-history <- replace_nulls_with_unknown(history)
 
 
 
@@ -155,4 +141,76 @@ print(null_counts)
 history$geo_school_elem_district[is.na(history$geo_school_elem_district)] <- "Unknown"
 null_counts <- colSums(is.na(history))
 print(null_counts)
+```
+
+
+
+```{r}
+print(colnames(history))
+
+
+```
+```{r}
+# backward stepwise selection
+
+install.packages("MASS")
+library(MASS)
+
+full_model <- lm(sale_price ~ ., data = history)
+stepwise_model <- stepAIC(full_model, direction = "backward")
+summary(stepwise_model)
+
+
+
+``` 
+```{r}
+coef(stepwise_model)
+summary(stepwise_model)$coefficients[, 4]
+# Extract variables with p-values less than 0.05
+significant_variables <- names(which(summary(stepwise_model)$coefficients[, 4] < 0.05))
+
+# Display the significant variables
+print(significant_variables)
+```
+```{r}
+# Make predictions using the backward_model
+coefficients <- coef(stepwise_model)
+
+# Extract the names of the variables with non-zero coefficients
+selected_variables <- names(coefficients[coefficients != 0])
+
+# Display the selected variables
+print(selected_variables)
+
+selected_variables <- names(coef(stepwise_model))
+print(selected_variables)
+```
+```{r}
+coef(full_model)
+```
+
+```{r}
+str(history)
+
+```
+```{r}
+
+history$ind_garage <- as.logical(tolower(history$ind_garage))
+predict$ind_garage <- as.logical(tolower(predict$ind_garage))
+geo_school_elem_district to numeric  
+geo_school_hs_district     to numeric
+
+
+library(glmnet)
+
+x <- model.matrix(sale_price ~ ., data = history)[, -1]  # Exclude the intercept
+y <- history$sale_price
+
+# Fit Lasso regression model with cross-validation
+cv_lasso <- cv.glmnet(x, y, alpha = 1)  # alpha = 1 for Lasso
+
+# Display the optimal lambda (tuning parameter)
+print(cv_lasso$lambda.min)
+
+
 ```
